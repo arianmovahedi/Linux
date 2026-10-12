@@ -1,4 +1,4 @@
-# Proxying APT, Curl, DNF, Docker and Git requests through a proxy
+# Proxying APT, Curl, DNF, Docker and Git requests through a socks5 proxy
 Setting up a system-wide proxy on a service running a Socks5 tunnel running socks on port `10808`, IP of the port is considered to be `192.168.0.197`:
 
 ```bash
@@ -43,4 +43,10 @@ We need to place the following config in the `/etc/systemd/docker.service.d/http
 [service]
 Environment="HTTP_PROXY=http://192.168.0.197:10808"
 Environment="HTTPS_PROXY=http://192.168.0.197:10808"
+```
+
+## Curl
+We can use the `--socks5-hostname` with the curl command. e.g:
+```bash
+curl --socks5-hostname 192.168.0.197:10808 -fsSL https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key | sudo gpg --dearmor --yes -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 ```
