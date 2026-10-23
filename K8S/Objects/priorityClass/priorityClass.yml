@@ -1,0 +1,11 @@
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: low-priority
+  namespace: test
+  labels:
+    priority: low
+value: -100
+globalDefault: true
+description: Lowest priority in test namespace
+preemptionPolicy: PremeptLowerPriority

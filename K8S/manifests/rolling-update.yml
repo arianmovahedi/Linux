@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: random-generator
+spec:
+  replicas: 3
+  strategy:
+    type: rollingUpdate
+    rollingUpdate:
+      maxSurge: 1 # Number of pods that can be temporarily in addition to the amount of replica specified
+      maxUnavailable: 1
+  minReadySeconds: 60 # Duration in seconds for all readiness probes for a rolled-out pod needs to be healthy until the rollout continues
+  selector:
+    matchLabels:
+      app: random-generator
+  template:
+    metadata:
+      labels:
+        app: random-generator
+    spec:
+      containers:
+      - name: random-generator
+        image: k8spatterns/random-generator:1.0
+        readinessProbe:
+          exec:
+            command: ["stat","/tmp/random-generator-ready"]

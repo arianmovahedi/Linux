@@ -74,6 +74,11 @@ kubectl label node worker-1 --show-labels
 ```bash
 kubectl get quota -n kube-system
 ```
+- Setting the namespace preference, the namespace the commands are going to run in without using the `-n` flag:
+```bash
+kubectl config set-context --current --namespace=<namespace>
+kubectl config view --minify 
+```
 
 ---
 # Diagrams
