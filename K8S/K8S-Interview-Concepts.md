@@ -70,6 +70,11 @@ kubectl label node worker-1 gpu=enabled --overwrite # overwrite
 kubectl label node worker-1 --show-labels
 ```
 
+- Getting all the `ResouceQuota`s set for the namespace:
+```bash
+kubectl get quota -n kube-system
+```
+
 ---
 # Diagrams
 ## Side Car Pattern

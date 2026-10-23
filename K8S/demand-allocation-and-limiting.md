@@ -1,4 +1,3 @@
-Following are some good principles to adhere to.
 # Predictable demands
 The resource requirements and the Runtime requirements should be defined. This allow kubernetes to schedule the Pods more efficiently since it can know the demand of each process in advance. One of the most important runtime requirements is storage and capacity planning is important and the data may need to survive after the pods are lost.
 
@@ -32,3 +31,16 @@ It is a best practice to use `limits` and `requests` for memory but only `reques
 
 # Pod Priority
 We can set the Pod priority to indicate the relative importance of a pod, affecting the order pods are scheduled. For this we need to define a `PritoriyClass` kind which has the `apiVersion` of `scheduling.k8s.io/v1`. We name the `PriorityClass` with its `metadata.name` and use it in the pods `spec.pritorityClassName` directive. We can see an example of that in this [manifest](K8S/manifests/priority-class.yml)
+
+`PriorityClass` is a non-namespace bound object. The `globalDefault` set to `true` is used for pods that do not specify a `priorityClassName`. Only one `PriorityClass` can have `globalDefault` set to `true`. Pod priority affects the order in which the scheduler places pods on nodes when multiple pods are waiting to be placed on the node. If no nodes with enough capacity is left the scheduler can preempt (remove) lower-priority pods form nodes to free resources and place pods with higher priority.
+
+If we don't want the high priority pod to evict lower priority existing pods we can add the following directive in the pod definition. We can define `ResourceQuota` to stop uninformed users to put high priority on their pods and reserve these priorities for crucial pods.
+```yaml
+preemptionPolicy: Never
+```
+# Project Resources
+We can define `ResoruceQuota` to provide constraints for limiting aggregated resource consumption in a namespace. We can constraint the CPU, RAM and storage consumption and also the total number of objects like ConfigMaps, Secrets, Pods and so on created in a namespace. We can see a resource quota object in this [manifest](K8S/manifests/resource-quota.yml).
+
+We can also use the `LimitRange` instead of the `ResourceQuota` to set some acceptable range for the resource demands but also the default values for the minimum and maximum requested resources if nothing is set in the pods manifests. We can use the type of `pod` or `container` to bind the limits to. We can also use ratios in this manifest as well, e.g. the memory limit must not be larger than twice the memory request. We can see an example in this [manifest](K8S/manifests/limit-range.yml).
+
+We can also define cap on the node PIDs effectively reserving some for the node itself so that they are exhausted by user workloads.
