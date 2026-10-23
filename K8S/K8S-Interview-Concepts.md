@@ -148,6 +148,15 @@ flowchart TB
     class TFNOTE,BNOTE note
 
 ```
+---
+# Rollout
+We can initiate a rollout in multiple ways. Firstly we need to create the original deployment. After that there are 4 main ways we can use to initiate the rollout:
+1. Replace the whole deployment with the new version with the `kubectl replace` command.
+2. Use `kubectl patch` or `kubectl edit` to add edit the container image.
+3. Use `kubectl set image` to set the new image in the deployment
+
+All these three methods are the imperative method of updating and rolling out a deployment. We must use the `kubectl apply` command to apply the changed and desired state.
+---
 
 ## Object Relations
 ```mermaid
