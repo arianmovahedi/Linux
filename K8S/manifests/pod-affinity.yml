@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Pod
+metadata: 
+  name: randon-generator
+spec:
+  affinity:
+    podAffinity: # spec.affinity.podAffinity, spec.affinity.nodeAffinity and spec.affinity.podAntiAffinity
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              confidentional: high
+          topologyKey: security-zone # The nodes on which Pods with labels confidential=high are running are sup‐
+                                     # posed to carry a security-zone label. The Pod defined here is scheduled to a
+                                     # node with the same label and value.
+    podAntiAffanity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              confidentional: none
+          topologyKey: kubernetes.io/hostname # Rule describing that the Pod should not (but could) be placed on any node where
+                                              # a Pod with the label confidential=none is running.
+  containers:
+    - image: k8spatterns/random-generator:1.0
+      name: random-generator
+
+# More granular as we go to the right:
+# nodeSelector -> nodeAffinity -> podAffinity/podAntiAffinity

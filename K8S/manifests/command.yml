@@ -1,0 +1,45 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: simple-random-generator
+spec:
+  containers:
+  - image: k8spatterns/random-generator:1.0
+    name: random-generator
+    command:
+    - "random-generator-runner"
+    args:
+    - "--seed"
+    - "-42"
+---
+# More advanced example:
+apiVersion: v1
+kind: Pod
+metadata:
+  name: wrapped-random-generator
+spec:
+  restartPolicy: OnFailure
+  volumes:
+  - name: wrapper
+    emptyDir: {} # A fresh emptyDir volume is created to share the supervisor daemon
+  initContainers: # Init container used for copying the supervisor daemon to the application containers
+  - name: copy-supervisior
+    image: k8spatterns/supervisor
+    volumeMounts:
+    - mountPath: /var/run/wrapper
+      name: wrapper
+    commmad: [ cp ]
+    args: [ supervisor, /var/run/wrapper/supervisor]
+  containers:
+  - image: k8spatterns/random-generator:1.0
+    name: random-generator
+    volumeMounts:
+    - mountPath: /var/run/wrapper
+      name: wrapper
+    command:
+    - "/var/run/wrapper/supervisor"
+    args: 
+    - "random-generator-runner"
+    - "--seed"
+    - "42"

@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: random-generator
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution: # IgnoredDuringExecution means the rule is not reevaluated during execution if the condition on the node changes
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: numberCores # This is a node label
+                operator: Gt
+                values: ["3"]
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+      preference:
+        matchFields:
+        - key: metadata.name
+          operator: NotIn
+          values: ["control-plane-node"]
+  containers:
+    - image: k8spatterns/random-generator:1.0
+      name: random-generator
