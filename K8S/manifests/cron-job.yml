@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: random-generator
+spec:
+  schedule: "*/3 * * * *"
+  jobTemplate: # JobTemplate uses the smae specification as a regular Job
+    spec:
+      template:
+        spec:
+          containers:
+          - image: k8spatterns/random-generator:1.0
+            name: random-generator
+            command:
+            - "java"
+            - "RandomRunner"
+            - "/numbers.txt"
+            - "10000"
+          restartPolicy: OnFailure

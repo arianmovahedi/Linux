@@ -1,0 +1,12 @@
+apiVersion: policy/v1 # Policy
+kind: PodDistributionBudget
+metadata:
+  name: random-generator-pbd
+spec:
+  selector:
+    matchLabels: # selector to count available Pods
+      app: random-generator
+  minAvailable: 2 # At least two pods have to be available.
+  # Meaning in case of an eviction we need to keep 2 of this
+  # maxUnavailable: 2
+  # only one of `minAvailable` or `maxAvailable` can be defined

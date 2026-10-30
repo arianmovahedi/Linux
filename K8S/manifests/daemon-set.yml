@@ -1,0 +1,26 @@
+apiVersion: app/v1
+kind: DaemonSet
+metadata: 
+  name: random-generator
+spec:
+  selector:
+    matchLabels:
+      app: random-generator
+  template:
+    metadata:
+      labels: 
+        app: random-generator
+    spec:
+      nodeSelector: # Use only with nodes with the following labels
+        feature: hw-rng
+      containers:
+      - image: k8spatterns/random-generator:1.0
+        name: random-generator
+        command: ["java", "RandomRunner", "/numbers.txt", "10000", "30"]
+        volumeMounts:
+          - name:  devices
+            mountPath:  /host_dev
+      volumes:
+      - name: devices
+        hostPath: 
+          path: /dev

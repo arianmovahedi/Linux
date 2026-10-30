@@ -1,0 +1,19 @@
+# This should be created first then cert issuer
+apiVersion: cret-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    email: admin@hudata.ir
+    server: https://amce-v02.api.letsencrypt.org/directory
+    privateLeySecretRef:
+      name: letsecnrypt-prod-account-key
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName: cilium
+# This assumes cert-manager is installed and Cilium Ingress is enabled. 
+# The hostname must resolve publicly to the Cilium ingress address, 
+# and inbound port 80 must be reachable so Let’s Encrypt can complete the HTTP-01 challenge
+---

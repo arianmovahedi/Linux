@@ -39,6 +39,9 @@ The following are the comparisons between the concept of K8S and OOP:
 - Using labels gives us the ability to query and identify a set of pods and manage it as one logical unit.
 - Labels are used by ReplicaSets to keep some instances of a specific pod running so every pod definition needs to have a unique combination of labels.
 - Labels are used by scheduler to colocate or spread pods to nodes that satisfy the pod's requirements.
+
+## Useful labels
+
 ---
 # Annotations
 - Just like labels these are organized as a map (key-value pair) but are intended for specifying nonsearchable metadata and are for machine usage.
@@ -78,6 +81,14 @@ kubectl get quota -n kube-system
 ```bash
 kubectl config set-context --current --namespace=<namespace>
 kubectl config view --minify 
+```
+
+- Waiting for a controller to be ready:
+```bash
+kubectl wait -n ingrss-nginx \
+    --for=codition=ready pod \
+    --selector=app.kubernetes.io/component=controller \
+    --timeout=90s
 ```
 
 ---

@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Node
+metadata:
+  name: control-plane-node
+spec:
+  taints:
+  - effect: NoSchedule # Telling if this taint isnt passed by the pod it can't be scheduled
+    key: node-role.kubernetes.io/control-plane
+    value: "true"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: random-generator
+spec:
+  containers:
+  - image: k8spatterns/random-generator:1.0
+    name: random-generator
+  tolerations:
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: NoSchedule

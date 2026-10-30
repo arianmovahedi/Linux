@@ -1,0 +1,95 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: {{ .Release.Name }}-script
+    namespace: {{ .Release.Namespace }}
+data:
+    report.py: |
+        import os, ssl, json, socket, struct, urllib.request
+
+        SA = "/var/run/secrets/kubernetes.io/serviceaccount/"
+        API = "https://%s:%s" % (os.environ["KUBERNETES_SERVICE_HOST"], os.environ["KUBERNETES_SERVICE_PORT"])
+        TOKEN = open(SA + "token").read()
+        CTX = ssl.create_default_context(cafile=SA + "ca.crt")
+        ZHOST = os.environ["ZABBIX_HOST"]
+
+        def get(path):
+            req = urllib.request.Request(API + path, headers={"Authorization": "Bearer " + TOKEN})
+            return json.load(urllib.request.urlopen(req, context=CTX, timeout=20))
+
+        def qty(v):
+            v = str(v)
+            units = {"Ki": 2**10, "Mi": 2**20, "Gi": 2**30, "Ti": 2**40, "m": 0.001}
+            for u, m in units.items():
+                if v.endswith(u):
+                    return float(v[:-len(u)]) * m
+            return float(v)
+
+        data = []
+        def put(key, value):
+            data.append({"host": ZHOST, "key": key, "value": str(value)})
+
+        # ---- Nodes ----
+        nodes = get("/api/v1/nodes")["items"]
+        put("k8s.node.discovery", json.dumps([{"{#NODE}": n["metadata"]["name"]} for n in nodes]))
+        not_ready = 0
+        for n in nodes:
+            name = n["metadata"]["name"]
+            ready = any(c["type"] == "Ready" and c["status"] == "True" for c in n["status"]["conditions"])
+            not_ready += 0 if ready else 1
+            put("k8s.node.ready[%s]" % name, 1 if ready else 0)
+            try:
+                s = get("/api/v1/nodes/%s/proxy/stats/summary" % name)["node"]
+                cpu_cap = qty(n["status"]["capacity"]["cpu"])
+                mem_cap = qty(n["status"]["capacity"]["memory"])
+                put("k8s.node.cpu_pct[%s]" % name, round(s["cpu"]["usageNanoCores"] / 1e9 / cpu_cap * 100, 2))
+                put("k8s.node.mem_pct[%s]" % name, round(s["memory"]["workingSetBytes"] / mem_cap * 100, 2))
+                fs = s["fs"]
+                put("k8s.node.disk_free_pct[%s]" % name, round(fs["availableBytes"] / fs["capacityBytes"] * 100, 2))
+            except Exception as e:
+                print("stats failed for", name, e)
+        put("k8s.nodes.total", len(nodes))
+        put("k8s.nodes.not_ready", not_ready)
+
+        # ---- Pods ----
+        pods = get("/api/v1/pods")["items"]
+        phases = {"Running": 0, "Pending": 0, "Failed": 0, "Succeeded": 0, "Unknown": 0}
+        restarts, crash = 0, []
+        for p in pods:
+            phases[p["status"].get("phase", "Unknown")] = phases.get(p["status"].get("phase", "Unknown"), 0) + 1
+            for cs in p["status"].get("containerStatuses", []):
+                restarts += cs.get("restartCount", 0)
+                if cs.get("state", {}).get("waiting", {}).get("reason") == "CrashLoopBackOff":
+                    crash.append("%s/%s" % (p["metadata"]["namespace"], p["metadata"]["name"]))
+        put("k8s.pods.total", len(pods))
+        for k, v in phases.items():
+            put("k8s.pods.%s" % k.lower(), v)
+        put("k8s.pods.restarts", restarts)
+        put("k8s.pods.crashloop", len(crash))
+        put("k8s.pods.crashloop.list", ", ".join(crash) or "none")
+
+        # ---- Deployments ----
+        deps = get("/apis/apps/v1/deployments")["items"]
+        bad = [d for d in deps if d["status"].get("availableReplicas", 0) < d["spec"].get("replicas", 1)]
+        put("k8s.deployments.total", len(deps))
+        put("k8s.deployments.unavailable", len(bad))
+
+        # ---- Send to Zabbix (trapper protocol) ----
+        body = json.dumps({"request": "sender data", "data": data}).encode()
+        pkt = b"ZBXD\x01" + struct.pack("<Q", len(body)) + body
+        with socket.create_connection((os.environ["ZABBIX_SERVER"], int(os.environ["ZABBIX_PORT"])), timeout=15) as sock:
+            sock.sendall(pkt)
+            buf = b""
+            while len(buf) < 13:
+                chunk = sock.recv(4096)
+                if not chunk:
+                    break
+                buf += chunk
+            rest = buf[13:]
+            length = struct.unpack("<Q", buf[5:13])[0]
+            while len(rest) < length:
+                chunk = sock.recv(4096)
+                if not chunk:
+                    break
+                rest += chunk
+        print(rest.decode())

@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: file-split
+spec:
+  completionMode: Indexed
+  completions: 5
+  parallelism: 5
+  template:
+    metadata:
+      name: file-split
+    containers:
+    - image: alpine
+      name: split
+      command:
+      - "sh"
+      - "-c"
+      - |
+        start=$(expr $JOB_COMPLETION_INDEX \* 10000)
+        end=$(expr $JOB_COMPLETION_INDEX \* 10000 + 10000)
+        awk "NR>$start && NR<$end" /logs/random.log \
+          > /logs/random-$JOB_COMPLETION_INDEX.txt
+      volumeMounts:
+      - mountPath: /logs
+        name: log-volume
+    restartPolicy: OnFailure

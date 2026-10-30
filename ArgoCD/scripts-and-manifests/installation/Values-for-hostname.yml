@@ -1,0 +1,12 @@
+---
+server:
+  ingress:
+    enabled: true
+    hostname: argo.hudata.ir
+    ingressClassName: cilium
+  extraArgs:
+    - --insecure
+
+# After changing thes use the following command:
+# helm upgrade -i argo-cd argo/argo-cd --namespace argocd --create-namespace \
+#   -f values-argocd-ingress.yml

@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: random-generator
+spec:
+  completions: 5 # Five jobs must complete successfuly before considering the Job as complete
+  parallelism: 2 # 2 pods can run in parallel
+  ttlSecondsAfterFinished: 300 # keep pods fpr five minutes before garbage collecting them
+  template: 
+    metadata:
+      name: random-generator
+    restartPolicy: OnFailure # Possible values for a Job is never and OnFailure
+    containers:
+    - image: k8spatterns/random-generator:1.0
+      name: random-generator
+      command: ["java", "RandomRunner","/numbers.txt","10000"]
