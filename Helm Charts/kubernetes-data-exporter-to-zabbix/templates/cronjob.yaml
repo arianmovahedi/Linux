@@ -1,53 +1,53 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-    name: {{ .Release.Name }}
-    namespace: {{ .Release.Namespace }}
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
 spec:
-    schedule: {{ .Values.schedule | quote }}
-    concurrencyPolicy: Forbid
-    successfulJobsHistroyLimit: 1
-    failedJobsHistoryLimit: 3
-    jobTemplate:
-        spec:  
-            backoffLimit: 0
-            activeDeadlineSeconds: 50
-            ttlSecondsAfterFinished: 300
-            template:
-                metadata: 
-                    labels:
-                        app: {{ .Release.Name }}
-                spec:
-                    serviceAccountName: {{ .Release.Name }}
-                    restartPolicy: Never
-                    securityContext:
-                        runAsNonRoot: true
-                        runAsUser: 65534
-                        seccompProfile: 
-                            type: RuntimeDefault
-                    containers:
-                        - name: reporter
-                          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-                          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
-                          command: ["python","/scripts/report.py"]
-                          env:
-                            - name: ZABBIX_SERVER
-                              value: {{ .Values.zabbix.server | quote }}
-                            - name: ZABBIX_HOST
-                              value: {{ .Values.zabbix.host | quote }}
-                            - name: ZABBIX_PORT
-                              value: {{ .Values.zabbix.port | quote }}
-                          resources: 
-                            {{- toYaml .Values.resources | nindent 28 -}}
-                          securityContext:
-                            allowPrivilegeEscalation: false
-                            readOnlyRootFilesystem: true
-                            capabilities:
-                                drop: ["ALL"]
-                          volumeMounts:
-                            - name: script
-                              mountPath: /scripts
-                    volumes:
-                        - name: script
-                          configMap:
-                            name: {{ .Release.Name }}-script
+  schedule: {{ .Values.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 50
+      ttlSecondsAfterFinished: 300
+      template:
+        metadata:
+          labels:
+            app: {{ .Release.Name }}
+        spec:
+          serviceAccountName: {{ .Release.Name }}
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65534
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: reporter
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command: ["python", "/scripts/report.py"]
+              env:
+                - name: ZABBIX_SERVER
+                  value: {{ .Values.zabbix.server | quote }}
+                - name: ZABBIX_PORT
+                  value: {{ .Values.zabbix.port | quote }}
+                - name: ZABBIX_HOST
+                  value: {{ .Values.zabbix.host | quote }}
+              resources:
+                {{- toYaml .Values.resources | nindent 16 }}
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+              volumeMounts:
+                - name: script
+                  mountPath: /scripts
+          volumes:
+            - name: script
+              configMap:
+                name: {{ .Release.Name }}-script
