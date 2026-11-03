@@ -15,3 +15,7 @@ The `PodDistributionBudget` has three fields in its `.spec`:
 Only one of the `.spec.maxUnavailable` and `.spec.minAvailable` can be used in a single `PodDistributionBudget`. For example: With a `minAvailable` of 5, evictions are allowed as long as they leave behind 5 or more healthy pods among those selected by the PodDisruptionBudget's selector.
 
 If you set maxUnavailable to 0% or 0, or you set minAvailable to 100% or the number of replicas, you are requiring zero voluntary evictions. When you set zero voluntary evictions for a workload object such as ReplicaSet, then you cannot successfully drain a Node running one of those Pods.
+
+Healthy Pods are the ones that have `.status.conditions` item with `type=Ready` and `status=True`. These pods are tracked via `.status.currentHealthy` field in the PDB status.
+
+PodDistributionBudget guarding an application ensures that `.status.currentHealthy` number of Pods doesn't fall below the number specified in the `.status.desiredHealthy` by disallowing eviction of healthy pods. By using the `.spec.unhealthyPodEvictionPolicy`, you can define the criteria when unhealthy pods should be considered for eviction. The default behavior when no policy is specified corresponds to the `IfHealthyBudget` policy.

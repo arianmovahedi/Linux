@@ -1,0 +1,19 @@
+schedule: "*/5 * * * *"
+
+image:
+  repository: python
+  tag: 3.12-alpine
+  pullPolicy: IfNotPresent
+
+zabbix:
+  server: "192.168.0.15"
+  port: 10051
+  host: k8s-cluster
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 32Mi
+  limits:
+    cpu: 100m
+    memory: 64Mi

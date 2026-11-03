@@ -1,0 +1,22 @@
+apiVersion: cilium.io/v2
+kind: ciliumNetworkPolicy
+metadata:
+  name: rule2
+spec:
+  description: Layer 7 network policy
+  endpointSelector:
+    matchLabels:
+      org: internal
+      unit: dev
+  ingress:
+    - fromEndpoints:
+      - matchLabels:
+          org: internal
+      toPorts:
+      - ports: 
+        - port: "80"
+          protocol: TCP
+        rules:
+          http:
+          - method: "POST"
+            path: "/v1/request"

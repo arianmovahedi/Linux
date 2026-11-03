@@ -1,0 +1,20 @@
+apiVersion: cilium.io/v2
+kind: ciliumNetworkPolicy
+metadata:
+  name: "rule1"
+spec:
+  description: "L3-L4 policy to restrict access"
+  endpointSelector:
+    matchLabels:
+      org: internal
+      unit: dev
+  ingress:
+  - fromEndpoints:
+    - matchLabels:
+        org: internal
+    toPorts:
+    - ports:
+      - port: "80"
+        protocol: TCP
+
+# To describe this use the kubectl describe cnp rule1

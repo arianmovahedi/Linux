@@ -1,0 +1,4 @@
+# Stateless Service
+A stateless service are composed of identical ephemeral replicas and are good for rapid scaling and high availability. A stateless service doesn't maintain any state internally within the instance accress service interactions meaning it doesn't hold any information from requests that is critical for serving any feature request. These services are made of identical, replacable instances that often offload state to external permanent storage systems and use load balancers for distributing incoming requests among themselves.
+
+An application is typically composed of a collection of Pods managed by a controller such as ReplicaSet, Deployment 
